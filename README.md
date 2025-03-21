@@ -10,13 +10,40 @@ Killer Queen is a team-based competitive game where two teams (Blue and Gold) ba
 2. **Military Victory**: Kill the enemy queen three times
 3. **Snail Victory**: Ride the snail to your team's goal
 
+## Features
+
+### Realistic Bee Models
+
+Each character is represented as a realistic bee with:
+- Detailed anatomical features (head, thorax, abdomen, antennae, legs)
+- Team-colored markings and role indicators
+- Animated wing flapping that responds to movement
+- Distinct visual designs for queens, workers, and soldiers
+
+### Flight Mechanics
+
+Characters move with realistic flight physics:
+- Dynamic banking during turns
+- Pitch adjustments during ascent and descent
+- Momentum-based movement
+- Hover capability with subtle oscillation
+- Camera follow with banking effects for immersive experience
+
+### Expanded Arena
+
+The game features a massive arena with:
+- 200x200 unit play area
+- Distant visual elements for depth perception
+- Team bases and strategic platforms
+- Visual landmarks for navigation
+
 ## Characters
 
 Each team has three character types:
 
-- **Queen**: Agile and powerful leader who can fly short distances
+- **Queen**: Agile and powerful leader with a distinctive crown
 - **Worker**: Can collect berries and ride the snail
-- **Soldier**: Can attack and eliminate opposing team members
+- **Soldier**: Combat specialist with distinctive side spikes
 
 ## Technology Stack
 
@@ -61,9 +88,11 @@ npm run dev
 2. Wait for the game to connect to the server
 3. You'll be automatically assigned to a team and role
 4. Use the following controls:
-   - WASD: Movement
-   - Space: Jump
-   - Mouse: Look around
+   - W: Fly forward (faster)
+   - S: Fly backward (slower)
+   - A/D: Turn left/right (with banking physics)
+   - Space: Ascend
+   - Shift: Descend
    
 ## Game Objectives
 
@@ -92,9 +121,9 @@ Depending on your role, you have different objectives:
 │   ├── game/             # Game-specific code
 │   │   ├── models/       # 3D models and characters
 │   │   ├── scenes/       # Game environments
-│   │   └── utils/        # Utility functions
+│   │   └── components/   # Reusable game components
 │   ├── networking/       # Socket.IO client implementation
-│   └── store/            # State management
+│   └── store/            # State management with persistence
 ├── server/               # Server-side code
 │   └── src/              # Server source code
 ├── public/               # Static assets
