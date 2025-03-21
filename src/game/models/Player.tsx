@@ -40,10 +40,16 @@ const CHARACTER_SIZES = {
   soldier: [1, 0.8, 1.5]
 }
 
-// Team colors
+// Team colors - make them more vibrant with higher contrast
 const TEAM_COLORS = {
-  blue: '#4455ff',
-  gold: '#ffcc22'
+  blue: '#0055ff',   // Deeper blue for better contrast
+  gold: '#ffdd00'    // Brighter yellow
+}
+
+// Body colors for teams
+const BODY_COLORS = {
+  blue: '#1144ff',   // Vibrant blue for main body
+  gold: '#ffcc00'    // Bright yellow for main body
 }
 
 // Simple bee model component
@@ -65,8 +71,7 @@ const BeeModel = ({ team, role, isFlying }: BeeModelProps) => {
   
   // Get team color
   const teamColor = TEAM_COLORS[team]
-  const bodyColor = team === 'blue' ? '#2233aa' : '#aa8800'
-  const stripeColor = '#000000'
+  const bodyColor = BODY_COLORS[team]
   
   // Size based on role
   const [width, height, length] = CHARACTER_SIZES[role]
@@ -75,8 +80,18 @@ const BeeModel = ({ team, role, isFlying }: BeeModelProps) => {
   const leftWingShape = useMemo(() => {
     const shape = new Shape();
     
-    // Draw an oval wing shape
-    shape.ellipse(0, 0, width * 0.6, length * 0.5, 0, Math.PI * 2, false);
+    // Create a wing with a narrower base that attaches to the bee and rounded tip
+    shape.moveTo(0, 0); // Start at the attachment point
+    shape.bezierCurveTo(
+      width * 0.1, length * 0.3, // Control point 1
+      width * 0.5, length * 0.6, // Control point 2 - adjusted for rounder tip
+      width * 0.6, length * 0.3  // End point - moved inward for rounded edge
+    );
+    shape.bezierCurveTo(
+      width * 0.6, length * 0.1, // Control point 1 - smoother curve
+      width * 0.2, -length * 0.2, // Control point 2
+      0, 0 // Complete the shape back at the origin
+    );
     
     return shape;
   }, [width, length]);
@@ -84,8 +99,18 @@ const BeeModel = ({ team, role, isFlying }: BeeModelProps) => {
   const rightWingShape = useMemo(() => {
     const shape = new Shape();
     
-    // Draw an oval wing shape
-    shape.ellipse(0, 0, width * 0.6, length * 0.5, 0, Math.PI * 2, false);
+    // Create a wing with a narrower base that attaches to the bee and rounded tip (mirror of left wing)
+    shape.moveTo(0, 0); // Start at the attachment point
+    shape.bezierCurveTo(
+      -width * 0.1, length * 0.3, // Control point 1
+      -width * 0.5, length * 0.6, // Control point 2 - adjusted for rounder tip
+      -width * 0.6, length * 0.3  // End point - moved inward for rounded edge
+    );
+    shape.bezierCurveTo(
+      -width * 0.6, length * 0.1, // Control point 1 - smoother curve
+      -width * 0.2, -length * 0.2, // Control point 2
+      0, 0 // Complete the shape back at the origin
+    );
     
     return shape;
   }, [width, length]);
@@ -101,12 +126,12 @@ const BeeModel = ({ team, role, isFlying }: BeeModelProps) => {
     const newRotation = Math.sin(state.clock.elapsedTime * flapSpeed) * 0.5
     setWingRotation(newRotation)
     
-    // Apply the rotation to the wings - use a different axis for more natural flapping
-    leftWingRef.current.rotation.z = -Math.abs(newRotation) * 0.5;
+    // Apply the rotation primarily to the y-axis (up/down flapping) with the pivot at the attachment point
     leftWingRef.current.rotation.y = newRotation * 0.8;
+    leftWingRef.current.rotation.z = -Math.abs(newRotation) * 0.3; // Reduced z-axis rotation
     
-    rightWingRef.current.rotation.z = Math.abs(newRotation) * 0.5;
     rightWingRef.current.rotation.y = -newRotation * 0.8;
+    rightWingRef.current.rotation.z = Math.abs(newRotation) * 0.3; // Reduced z-axis rotation
     
     // Add a gentle hover effect to the entire bee
     if (groupRef.current) {
@@ -119,167 +144,107 @@ const BeeModel = ({ team, role, isFlying }: BeeModelProps) => {
     <group ref={groupRef}>
       {/* Main bee body - rotated to be horizontal */}
       <group ref={bodyRef} rotation={[Math.PI / 2, 0, 0]}>
-        {/* Main body segments - thorax and abdomen */}
+        {/* Create a single main body - even shorter and more round */}
         <mesh position={[0, 0, 0]} castShadow>
-          <capsuleGeometry args={[width/2, length * 0.75, 16, 32]} />
+          <sphereGeometry args={[width/1.3, 16, 16]} />
           <meshStandardMaterial color={bodyColor} />
         </mesh>
         
-        {/* Head segment - slightly smaller sphere at the front */}
-        <mesh position={[0, length/2, 0]} castShadow>
-          <sphereGeometry args={[width*0.4, 16, 16]} />
+        {/* Head segment - moved closer to body for shorter appearance */}
+        <mesh position={[0, length/4, 0]} castShadow>
+          <sphereGeometry args={[width*0.42, 16, 16]} />
           <meshStandardMaterial color={bodyColor} />
         </mesh>
         
-        {/* Stripes on abdomen */}
-        <mesh position={[0, -length/5, 0]} rotation={[Math.PI/2, 0, 0]}>
-          <cylinderGeometry args={[width/2 + 0.01, width/2 + 0.01, 0.3, 16]} />
-          <meshStandardMaterial color={stripeColor} />
-        </mesh>
-        <mesh position={[0, -length/2.5, 0]} rotation={[Math.PI/2, 0, 0]}>
-          <cylinderGeometry args={[width/2 + 0.01, width/2 + 0.01, 0.3, 16]} />
-          <meshStandardMaterial color={stripeColor} />
-        </mesh>
+        {/* Removing eyes and smile as requested */}
         
-        {/* Eyes on the head */}
-        <mesh position={[width/4, length/2 + width*0.2, width/5]} rotation={[0, -Math.PI/6, 0]}>
-          <sphereGeometry args={[width/6, 16, 16]} />
-          <meshStandardMaterial color="#ffffff" />
-        </mesh>
-        <mesh position={[-width/4, length/2 + width*0.2, width/5]} rotation={[0, Math.PI/6, 0]}>
-          <sphereGeometry args={[width/6, 16, 16]} />
-          <meshStandardMaterial color="#ffffff" />
-        </mesh>
-        
-        {/* Pupils */}
-        <mesh position={[width/4, length/2 + width*0.22, width/3.5]} rotation={[0, -Math.PI/6, 0]}>
-          <sphereGeometry args={[width/12, 8, 8]} />
+        {/* Stinger - repositioned to connect with body and properly oriented with pointy end outward */}
+        <mesh position={[0, -width/1.1, 0]} rotation={[Math.PI, 0, 0]}>
+          <coneGeometry args={[width/12, width/2, 8]} />
           <meshStandardMaterial color="#000000" />
         </mesh>
-        <mesh position={[-width/4, length/2 + width*0.22, width/3.5]} rotation={[0, Math.PI/6, 0]}>
-          <sphereGeometry args={[width/12, 8, 8]} />
-          <meshStandardMaterial color="#000000" />
-        </mesh>
-        
-        {/* Stinger */}
-        <mesh position={[0, -length/2 - width/3, 0]} rotation={[0, 0, 0]}>
-          <coneGeometry args={[width/8, width/2, 8]} />
-          <meshStandardMaterial color={stripeColor} />
-        </mesh>
-        
-        {/* Antennae */}
-        <group position={[0, length/2 + width*0.3, 0]}>
-          <mesh position={[width/5, 0, 0]} rotation={[0, 0, Math.PI/6]}>
-            <cylinderGeometry args={[width/30, width/30, width/2, 8]} />
-            <meshStandardMaterial color={stripeColor} />
-          </mesh>
-          <mesh position={[-width/5, 0, 0]} rotation={[0, 0, -Math.PI/6]}>
-            <cylinderGeometry args={[width/30, width/30, width/2, 8]} />
-            <meshStandardMaterial color={stripeColor} />
-          </mesh>
-          <mesh position={[width/5 + Math.sin(Math.PI/6)*(width/4), Math.cos(Math.PI/6)*(width/4), 0]}>
-            <sphereGeometry args={[width/20, 8, 8]} />
-            <meshStandardMaterial color={stripeColor} />
-          </mesh>
-          <mesh position={[-width/5 - Math.sin(Math.PI/6)*(width/4), Math.cos(Math.PI/6)*(width/4), 0]}>
-            <sphereGeometry args={[width/20, 8, 8]} />
-            <meshStandardMaterial color={stripeColor} />
-          </mesh>
-        </group>
-        
-        {/* Small legs */}
-        <group position={[0, 0, 0]}>
-          {[...Array(3)].map((_, i) => (
-            <group key={`leg-right-${i}`} position={[width/2, length/4 - i*length/5, 0]} rotation={[0, 0, Math.PI/4]}>
-              <mesh>
-                <cylinderGeometry args={[width/40, width/40, width/2, 8]} />
-                <meshStandardMaterial color={stripeColor} />
-              </mesh>
-            </group>
-          ))}
-          
-          {[...Array(3)].map((_, i) => (
-            <group key={`leg-left-${i}`} position={[-width/2, length/4 - i*length/5, 0]} rotation={[0, 0, -Math.PI/4]}>
-              <mesh>
-                <cylinderGeometry args={[width/40, width/40, width/2, 8]} />
-                <meshStandardMaterial color={stripeColor} />
-              </mesh>
-            </group>
-          ))}
-        </group>
       </group>
       
-      {/* Wings - positioned based on the horizontal bee body */}
+      {/* Wings and antennae - positioned on top of the bee body */}
       <group position={[0, width/4, 0]} rotation={[0, 0, 0]}>
-        {/* Left wing */}
-        <group position={[width/2, 0, 0]}>
+        {/* Left wing - positioned to attach directly to the bee body */}
+        <group position={[width/1.5, 0, -width/10]}>
           <mesh 
             ref={leftWingRef} 
-            position={[width/4, 0, 0]} 
+            position={[0, 0, 0]} 
             rotation={[Math.PI/2, 0, 0]}
           >
             <shapeGeometry args={[leftWingShape]} />
             <meshStandardMaterial 
               color="#ffffff" 
               transparent={true} 
-              opacity={0.6} 
+              opacity={0.35} 
               side={DoubleSide}
-              metalness={0.2}
-              roughness={0.3}
+              metalness={0.3}
+              roughness={0.2}
             />
           </mesh>
         </group>
         
-        {/* Right wing */}
-        <group position={[-width/2, 0, 0]}>
+        {/* Right wing - positioned to attach directly to the bee body */}
+        <group position={[-width/1.5, 0, -width/10]}>
           <mesh 
             ref={rightWingRef} 
-            position={[-width/4, 0, 0]} 
+            position={[0, 0, 0]} 
             rotation={[Math.PI/2, 0, 0]}
           >
             <shapeGeometry args={[rightWingShape]} />
             <meshStandardMaterial 
               color="#ffffff" 
               transparent={true} 
-              opacity={0.6} 
+              opacity={0.35} 
               side={DoubleSide}
-              metalness={0.2}
-              roughness={0.3}
+              metalness={0.3}
+              roughness={0.2}
             />
+          </mesh>
+        </group>
+        
+        {/* Antennae relocated to top of bee near wings */}
+        <group>
+          {/* Left antenna - single continuous element */}
+          <mesh position={[width/3, -width/10, 0]} rotation={[Math.PI, 0, Math.PI/6]}>
+            <cylinderGeometry args={[width/50, width/35, width*1.5, 8]} />
+            <meshStandardMaterial color="#000000" />
+          </mesh>
+          
+          {/* Right antenna - single continuous element */}
+          <mesh position={[-width/3, -width/10, 0]} rotation={[Math.PI, 0, -Math.PI/6]}>
+            <cylinderGeometry args={[width/50, width/35, width*1.5, 8]} />
+            <meshStandardMaterial color="#000000" />
           </mesh>
         </group>
       </group>
       
-      {/* Team indicator */}
-      <mesh position={[0, width/1.5, -length/4]} rotation={[0, 0, 0]}>
-        <sphereGeometry args={[width/4, 8, 8]} />
-        <meshStandardMaterial color={teamColor} emissive={teamColor} emissiveIntensity={0.5} />
-      </mesh>
-      
       {/* Role indicator for soldier (add small spikes) */}
       {role === 'soldier' && (
-        <group position={[0, width/3, 0]} rotation={[Math.PI/2, 0, 0]}>
+        <group position={[0, width/5, 0]} rotation={[Math.PI/2, 0, 0]}>
           <mesh position={[width/2, 0, 0]} rotation={[0, 0, Math.PI/2]}>
-            <coneGeometry args={[width/8, width/2, 4]} />
+            <coneGeometry args={[width/10, width/2, 4]} />
             <meshStandardMaterial color={teamColor} />
           </mesh>
           <mesh position={[-width/2, 0, 0]} rotation={[0, 0, -Math.PI/2]}>
-            <coneGeometry args={[width/8, width/2, 4]} />
+            <coneGeometry args={[width/10, width/2, 4]} />
             <meshStandardMaterial color={teamColor} />
           </mesh>
         </group>
       )}
       
-      {/* Crown for queen */}
+      {/* Crown for queen - make it less obtrusive */}
       {role === 'queen' && (
-        <group position={[0, width, -length/6]} rotation={[Math.PI/4, 0, 0]}>
+        <group position={[0, width/2, -length/10]} rotation={[Math.PI/5, 0, 0]}>
           <mesh position={[0, 0, 0]} rotation={[0, 0, 0]}>
-            <cylinderGeometry args={[width/2, width/3, width/3, 5]} />
-            <meshStandardMaterial color={teamColor} metalness={0.8} roughness={0.2} />
+            <cylinderGeometry args={[width/3, width/4, width/4, 5]} />
+            <meshStandardMaterial color={teamColor} metalness={0.6} roughness={0.3} />
           </mesh>
-          <mesh position={[0, width/3, 0]} rotation={[0, 0, 0]}>
-            <sphereGeometry args={[width/6, 8, 8]} />
-            <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={0.5} />
+          <mesh position={[0, width/5, 0]} rotation={[0, 0, 0]}>
+            <sphereGeometry args={[width/10, 8, 8]} />
+            <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={0.3} />
           </mesh>
         </group>
       )}
@@ -417,7 +382,8 @@ const Player = ({
     velocityRef.current = new Vector3(velocity.x, velocity.y, velocity.z);
     
     // Calculate flight dynamics
-    const { roll, pitch } = flightDynamics.current;
+    // Commenting out unused destructuring
+    // const { roll, pitch } = flightDynamics.current;
     
     // Apply flight forces - more airplane-like physics
     const impulse = { x: 0, y: 0, z: 0 };

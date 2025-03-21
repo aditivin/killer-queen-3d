@@ -36,18 +36,25 @@ interface DecorativeElementsProps {
   spread?: number;
 }
 
+// Deterministic pseudo-random number generator based on an index
+const getPseudoRandom = (index: number, offset: number = 0) => {
+  // Simple deterministic algorithm - always returns the same value for the same index
+  return (Math.sin(index * 12.9898 + offset * 78.233) * 43758.5453) % 1;
+};
+
 const DecorativeElements = ({ count = 40, spread = 100 }: DecorativeElementsProps) => {
   return (
     <group>
       {Array.from({ length: count }).map((_, i) => {
-        // Generate positions in a grid-like pattern but with slight randomness
-        const posX = (Math.floor(i / 5) * 25) - spread/2 + (Math.random() * 10)
-        const posZ = (i % 5 * 25) - spread/2 + (Math.random() * 10)
+        // Generate positions in a grid-like pattern with deterministic randomness
+        const posX = (Math.floor(i / 5) * 25) - spread/2 + (getPseudoRandom(i, 1) * 10)
+        const posZ = (i % 5 * 25) - spread/2 + (getPseudoRandom(i, 2) * 10)
         // Don't place elements in the center gameplay area
         if (Math.abs(posX) < 25 && Math.abs(posZ) < 20) return null;
         
-        const scale = 0.5 + Math.random() * 1.5;
-        const type = Math.floor(Math.random() * 3);
+        // Use deterministic values for scale and type
+        const scale = 0.5 + getPseudoRandom(i, 3) * 1.5;
+        const type = Math.floor(getPseudoRandom(i, 4) * 3);
         
         return (
           <RigidBody key={`decor-${i}`} type="fixed" position={[posX, 0, posZ]} restitution={0.2} friction={1}>
@@ -55,7 +62,7 @@ const DecorativeElements = ({ count = 40, spread = 100 }: DecorativeElementsProp
               {type === 0 && <boxGeometry args={[2 * scale, 4 * scale, 2 * scale]} />}
               {type === 1 && <cylinderGeometry args={[1 * scale, 1 * scale, 3 * scale, 8]} />}
               {type === 2 && <sphereGeometry args={[1.5 * scale, 16, 16]} />}
-              <meshStandardMaterial color={Math.random() > 0.5 ? '#335533' : '#553333'} />
+              <meshStandardMaterial color={getPseudoRandom(i, 5) > 0.5 ? '#335533' : '#553333'} />
             </mesh>
           </RigidBody>
         );
